@@ -10,7 +10,8 @@ id_i = 0
 H_id_i = 0
 H_I = 0
 canid_list = list()
-with open("1min_CANtraffic.log") as f:
+#with open("1min_CANtraffic.log") as f:
+with open("1min_DoStraffic.log") as f:
 	for log in f:
 		log_split = log.split(" ")
 		canpacket = log_split[2].split("#")
