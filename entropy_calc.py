@@ -29,7 +29,7 @@ with open("1min_DoStraffic.log") as f:
 					#print( (id_count[canid_i]/W)*(math.log(W/id_count[canid_i])) )
 			H_I = H_id_i
 			H_id_i = 0
-			print("[%d]H_I=%f" % (w_count, H_I))
+			print("[%d] H_I=%f" % (w_count, H_I))
 			#list clear
 			canid_list = []
 			id_i = 0
