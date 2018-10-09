@@ -1,15 +1,13 @@
 # -+- coding: utf-8 -*-
+import sys
 import random	#Random module
 import math
 
 # Ra is detection rate attack blocks 
 # Rn is detection rate normal blocks
 # Rt is detection time
-Ra = 0
 Da = 0
-Rn = 0
 Dn = 0
-Rt = 0
 
 # Ta is attack log total, Tn is normal log total
 Ta = 1000
@@ -32,6 +30,10 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 	w_count = 0
 	H_id_i = 0
 	H_I = 0
+	id_i = 0
+	Ra = 0
+	Rn = 0
+	Rt = 0
 
 	# calculate Ra, Rn, Rt
 	for I in Test_Data:
@@ -71,7 +73,6 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 			canid_list = []
 			id_i = 0
 
-	
 	return Ra, Rn, Rt
 
 def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000):
@@ -82,9 +83,10 @@ def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000):
 	W_best		= random.random()
 	Ra, Rn, Rt 	= EntropyBased_IntrusionDetect(DoS_Data, k_best, div_best, W_best)
 	e_best		= function_E(Ra, Rn, Rt)
+	e_prev 		= function_E(Ra, Rn, Rt)
 	T 			= 0
 
-	while T < Tmax and e < e_best:
+	while T < Tmax and e_prev < e_best:
 		# row 7 in paper
 		div_next = random.random()
 		W_next = random.random()
@@ -94,7 +96,7 @@ def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000):
 		e_next = function_E(Ra, Rn, Rt)
 
 		# calcurate probability from templature.
-		p = pow(math.e, -abs(e_next- e_prev) / T)
+		p = abs(e_next - e_prev)*(T/Tmax)
 
 		# 変更後のコストが小さければ採用する。
 		# コストが大きい場合は確率的に採用する。
@@ -113,5 +115,14 @@ def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000):
 	return div_best, W_best
 
 if __name__ == '__main__':
-	div, WindowSize = SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000)
-	print("Optimazed Param:Deviation=%f, WindowSize=%d" %(div, WindowSize))
+	argvs = sys.argv
+	argc = len(argvs)
+	if argc < 2:
+		print('Usage: python3 %s filename' % argvs[0])
+		print('[filename format]\n\t[CAN ID]#[PAYLOAD]\nex)\t000#00000000')
+		quit()
+
+	CANtraffic_log = argvs[1]
+	with open(CANtraffic_log) as DoS_Data:
+		div, WindowSize = SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000)
+		print("Optimazed Param:Deviation=%f, WindowSize=%d" %(div, WindowSize))
