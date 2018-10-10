@@ -6,8 +6,8 @@ import math
 # Ta is attack log total packet num, Tn is normal log total packet num
 #Ta_packet = 1000
 #Tn_packet = 57001
-Ta_packet = 335624
-Tn_packet = 320955
+Ta_packet = 1000
+Tn_packet = 1000
 
 # Three weighted parameters
 C1 = 1
@@ -28,7 +28,7 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 	# Rt is detection time
 	Ra = 0
 	Rn = 0
-	Rt = 1
+	Rt = 0
 	Da = 0
 	Dn = 0
 	ave = 3.0
@@ -54,7 +54,11 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 			I_spt =	I.split(" ")
 			canpacket = I_spt[1].split("#")
 			canid_list.append(canpacket[0])
-			labels.append(I_spt[0])
+			if I_spt[0] == "1":
+				True_count += 1
+			else:
+				False_count += 1
+			#print(labels)
 			#print(canpacket[0])
 			id_i += 1
 
@@ -76,60 +80,52 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 
 				# perform Intrusion Detection using Sliding Entropy
 				if H_I < (ave-k*div) or (ave+k*div) < H_I:
-					for label in labels:
-						# 1 is attack
-						if label == "1":
-							True_count += 1
-						# 0 is nomal
-						else :
-							False_count += 1
 					# True Positive
 					if True_count > False_count:
 						Da += 1
 						Ra = (float(Da)/Ta)*100
-						Rt = 1
 					# False Positive
 					else:
 						Dn += 1
 						Rn = (float(Dn)/Tn)*100
-						Rt = 1
 
 				#print("[%d] H_I=%f" % (w_count, H_I))
 				H_id_i = 0
 				canid_list = []
 				id_i = 0
-	print("W=%d, Ta=%d, Tn=%d, Da=%d, Dn=%d"%(WindowSize, Ta, Tn, Da, Dn))
+				True_count = 0
+				False_count = 0
+	#print("W=%d, Ta=%d, Tn=%d, Da=%d, Dn=%d"%(WindowSize, Ta, Tn, Da, Dn))
 	return Ra, Rn, Rt
 
-def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000, cool=0.99):
+def SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99):
 	# init random value
 	#vec = random.randint(-2,2)
 	k_best		= 0.6
 	div_best	= random.random()
-	W_best		= random.randint(1,100)
+	W_best		= random.randint(5,70)
 	Ra, Rn, Rt 	= EntropyBased_IntrusionDetect(DoS_Data, k_best, div_best, W_best)
 	e_best		= function_E(Ra, Rn, Rt)
 	e_prev 		= function_E(Ra, Rn, Rt)-1
 	print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
-	print("E_best=%f"%e_best)
-	T 			= 1
+	#print("E_best=%f"%e_best)
 
 	print("init Param:Deviation=%f, WindowSize=%d" %(div_best, W_best))
 
 	while T > 0.0001 and e_prev < e_best:
 		# row 7 in paper
 		div_next = random.random()
-		W_next = random.randint(W_best-50,W_best+50)
+		W_next = random.randint(W_best-10,W_best+10)
 
 		# row 8 in paper
 		Ra, Rn, Rt = EntropyBased_IntrusionDetect(DoS_Data, k_best, div_next, W_next)
 		e_next = function_E(Ra, Rn, Rt)
 		print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
-		print("E=%f,E_best=%f"%(e_next,e_best))
+		#print("E=%f,E_best=%f"%(e_next,e_best))
 
 		# calcurate probability from templature.
 		p = pow(math.e, -abs(e_next - e_prev)/float(T))
-		print("[%f]Probability=%f"%(T, p))
+		#print("[%f]Probability=%f"%(T, p))
 
 		# 変更後のコストが小さければ採用する。
 		# コストが大きい場合は確率的に採用する。
@@ -156,5 +152,5 @@ if __name__ == '__main__':
 		quit()
 
 	DoS_Data = argvs[1]
-	div, WindowSize = SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000, cool=0.99)
+	div, WindowSize = SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99)
 	print("Optimazed Param:Deviation=%f, WindowSize=%d" %(div, WindowSize))
