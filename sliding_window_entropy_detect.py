@@ -101,16 +101,15 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 def SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99):
 	# init random value
 	#vec = random.randint(-2,2)
-	k_best		= 0.6
+	k_best		= 1.0
 	div_best	= random.random()
 	W_best		= random.randint(5,70)
 	Ra, Rn, Rt 	= EntropyBased_IntrusionDetect(DoS_Data, k_best, div_best, W_best)
 	e_best		= function_E(Ra, Rn, Rt)
 	e_prev 		= function_E(Ra, Rn, Rt)-1
-	print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
 	#print("E_best=%f"%e_best)
-
 	print("init Param:Deviation=%f, WindowSize=%d" %(div_best, W_best))
+	print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
 
 	while T > 0.0001 and e_prev < e_best:
 		# row 7 in paper
@@ -127,8 +126,7 @@ def SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99):
 		p = pow(math.e, -abs(e_next - e_prev)/float(T))
 		#print("[%f]Probability=%f"%(T, p))
 
-		# 変更後のコストが小さければ採用する。
-		# コストが大きい場合は確率的に採用する。
+		# row 9 in paper
 		if random.random() < p:
 			div_prev 	= div_next
 			W_prev 		= W_next
@@ -138,7 +136,7 @@ def SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99):
 				W_best 		= W_prev
 				e_best 		= e_prev
 
-		# update templature
+		# cool down
 		T = T * cool
 
 	return div_best, W_best
