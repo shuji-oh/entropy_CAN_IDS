@@ -3,9 +3,11 @@ import sys
 import random	#Random module
 import math
 
-# Ta is attack log total, Tn is normal log total
-Ta = 1000
-Tn = 35000
+# Ta is attack log total packet num, Tn is normal log total packet num
+#Ta_packet = 1000
+#Tn_packet = 57001
+Ta_packet = 335624
+Tn_packet = 320955
 
 # Three weighted parameters
 C1 = 1
@@ -17,7 +19,7 @@ def function_E(Ra, Rn, Rt):
 	global C1
 	global C2
 	global C3
-	return Ra*C1+Rn*C2+Rt*C3
+	return Ra*C1-Rn*C2-Rt*C3
 
 def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 	
@@ -26,15 +28,23 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 	# Rt is detection time
 	Ra = 0
 	Rn = 0
-	Rt = 0
+	Rt = 1
 	Da = 0
 	Dn = 0
-	ave = 4.186
+	ave = 3.0
 	w_count = 0
 	H_id_i = 0
 	H_I = 0
 	id_i = 0
+	True_count = 0
+	False_count = 0
 	canid_list = list()
+	labels = list()
+	global Ta_packet
+	global Tn_packet
+	Ta = Ta_packet/WindowSize
+	Tn = Tn_packet/WindowSize
+	
 	
 	with open(Test_Data) as Is:
 		# calculate Ra, Rn, Rt
@@ -42,8 +52,10 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 
 			# create canid list of WindowSize
 			I_spt =	I.split(" ")
-			canpacket = I_spt[2].split("#")
+			canpacket = I_spt[1].split("#")
 			canid_list.append(canpacket[0])
+			labels.append(I_spt[0])
+			#print(canpacket[0])
 			id_i += 1
 
 			# if canid_list of WindowSize is created,
@@ -64,45 +76,60 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 
 				# perform Intrusion Detection using Sliding Entropy
 				if H_I < (ave-k*div) or (ave+k*div) < H_I:
-					Da += 1
-					Ra = (float(Da*WindowSize)/Ta)
-					#Rt = Current - attack
-					Rt = 1
-				else:
-					Dn += 1
-					Rn = (float(Dn*WindowSize)/Tn)
+					for label in labels:
+						# 1 is attack
+						if label == "1":
+							True_count += 1
+						# 0 is nomal
+						else :
+							False_count += 1
+					# True Positive
+					if True_count > False_count:
+						Da += 1
+						Ra = (float(Da)/Ta)*100
+						Rt = 1
+					# False Positive
+					else:
+						Dn += 1
+						Rn = (float(Dn)/Tn)*100
+						Rt = 1
 
-				print("[%d] H_I=%f" % (w_count, H_I))
+				#print("[%d] H_I=%f" % (w_count, H_I))
 				H_id_i = 0
 				canid_list = []
 				id_i = 0
-
+	print("W=%d, Ta=%d, Tn=%d, Da=%d, Dn=%d"%(WindowSize, Ta, Tn, Da, Dn))
 	return Ra, Rn, Rt
 
-def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000):
+def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000, cool=0.99):
 	# init random value
 	#vec = random.randint(-2,2)
 	k_best		= 0.6
 	div_best	= random.random()
-	W_best		= random.randint(1,1000)
+	W_best		= random.randint(1,100)
 	Ra, Rn, Rt 	= EntropyBased_IntrusionDetect(DoS_Data, k_best, div_best, W_best)
 	e_best		= function_E(Ra, Rn, Rt)
-	e_prev 		= function_E(Ra, Rn, Rt)
-	T 			= 0
+	e_prev 		= function_E(Ra, Rn, Rt)-1
+	print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
+	print("E_best=%f"%e_best)
+	T 			= 1
 
 	print("init Param:Deviation=%f, WindowSize=%d" %(div_best, W_best))
 
-	while T < Tmax and e_prev < e_best:
+	while T > 0.0001 and e_prev < e_best:
 		# row 7 in paper
 		div_next = random.random()
-		W_next = random.random()
+		W_next = random.randint(W_best-50,W_best+50)
 
 		# row 8 in paper
 		Ra, Rn, Rt = EntropyBased_IntrusionDetect(DoS_Data, k_best, div_next, W_next)
 		e_next = function_E(Ra, Rn, Rt)
+		print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
+		print("E=%f,E_best=%f"%(e_next,e_best))
 
 		# calcurate probability from templature.
-		p = pow(math.e, -abs(e_next - e_prev)/(T/Tmax))
+		p = pow(math.e, -abs(e_next - e_prev)/float(T))
+		print("[%f]Probability=%f"%(T, p))
 
 		# 変更後のコストが小さければ採用する。
 		# コストが大きい場合は確率的に採用する。
@@ -116,7 +143,7 @@ def SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000):
 				e_best 		= e_prev
 
 		# update templature
-		T = T + 1
+		T = T * cool
 
 	return div_best, W_best
 
@@ -125,9 +152,9 @@ if __name__ == '__main__':
 	argc = len(argvs)
 	if argc < 2:
 		print('Usage: python3 %s filename' % argvs[0])
-		print('[filename format]\n\t[CAN ID]#[PAYLOAD]\nex)\t000#00000000')
+		print('[filename format]\n\t[label] [CAN ID]#[PAYLOAD]\nex)\t1 000#00000000')
 		quit()
 
 	DoS_Data = argvs[1]
-	div, WindowSize = SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000)
+	div, WindowSize = SimulatedAnnealing_Optimize(DoS_Data, Tmax=10000, cool=0.99)
 	print("Optimazed Param:Deviation=%f, WindowSize=%d" %(div, WindowSize))
