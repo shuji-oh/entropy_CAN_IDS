@@ -2,7 +2,7 @@ import math
 import sys
 w_count = 0
 
-W = 50
+W = 60
 k = 1.0
 div = 0.507669
 ave = 3.0
@@ -52,9 +52,10 @@ Data = argvs[1]
 with open(Data) as f:
 	for log in f:
 		log_split = log.split(" ")
-		canpacket = log_split[1].split("#")
-		canid_list.append(canpacket[0])
-		#print(canpacket[0])
+		range_entropy = int(log_split[0])
+		canpacket = log_split[2]
+		canid_list.append(canpacket)
+		#print(canpacket)
 		id_i += 1
 		Packet_count += 1
 
@@ -73,6 +74,9 @@ with open(Data) as f:
 				if id_count[canid_i] != 0:
 					H_id_i += (float(id_count[canid_i])/W)*(math.log(float(W)/id_count[canid_i])) 
 			H_I = H_id_i
+			print("%d %f" % (range_entropy, H_I))
+
+			'''
 			if H_I < (ave-k*div) or (ave+k*div) < H_I:
 				# True Positive
 				if True_count > False_count:
@@ -89,6 +93,7 @@ with open(Data) as f:
 			if H_I < Min_H_I:
 				Min_H_I = H_I
 			Ave_H_I += H_I
+			'''
 
 			#list clear
 			canid_list = []

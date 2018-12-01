@@ -31,7 +31,7 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 	Rt = 0
 	Da = 0
 	Dn = 0
-	ave = 3.0
+	ave = 2.0
 	w_count = 0
 	H_id_i = 0
 	H_I = 0
@@ -160,10 +160,11 @@ if __name__ == '__main__':
 	for i in range(N):
 		div, WindowSize, Ra, Rn, Rt = SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99)
 		if (Ra+Rn) != 0:
-			if precison_max < float(Ra)/(Ra+Rn) and 80.0 < Ra:
+			if precison_max < float(Ra)/(Ra+Rn) and 90.0 < Ra:
 				precison_max = float(Ra)/(Ra+Rn)
 				Ra_max = Ra
 				Rn_max = Rn
 				Rt_max = Rt
-		print("[%d]Optimazed Param:Deviation=%f, WindowSize=%d" %(i, div, WindowSize))
-	print("Ra=%f,Rn=%f,Rt=%f,Precision=%f"%(Ra_max,Rn_max,Rt_max,precison_max))
+		#print("[%d]Optimazed Param:Deviation=%f, WindowSize=%d" %(i, div, WindowSize))
+	#print("Ra=%f,Rn=%f,Rt=%f,Precision=%f"%(Ra_max,Rn_max,Rt_max,precison_max))
+	print(precison_max*100.0)

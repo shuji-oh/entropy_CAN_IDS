@@ -119,7 +119,7 @@ def SimulatedAnnealing_Optimize(DoS_Data, T=10000, cool=0.99):
 		# row 8 in paper
 		Ra, Rn, Rt = EntropyBased_IntrusionDetect(DoS_Data, k_best, div_next, W_next)
 		e_next = function_E(Ra, Rn, Rt)
-		print("Ra=%f,Rn=%f,Rt=%f"%(Ra,Rn,Rt))
+		print("Ra=%f,Rn=%f,Rt=%f,Precision=%f"%(Ra,Rn,Rt,float(Ra)/(Ra+Rn)))
 		#print("E=%f,E_best=%f"%(e_next,e_best))
 
 		# calcurate probability from templature.
