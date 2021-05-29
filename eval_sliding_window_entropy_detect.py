@@ -31,7 +31,7 @@ def EntropyBased_IntrusionDetect(Test_Data, k, div, WindowSize):
 	Rt = 0
 	Da = 0
 	Dn = 0
-	ave = 2.09613
+	ave = 3.0
 	w_count = 0
 	H_id_i = 0
 	H_I = 0
@@ -168,4 +168,4 @@ if __name__ == '__main__':
 		#print("[%d]Optimazed Param:Deviation=%f, WindowSize=%d" %(i, div, WindowSize))
 	#print("Ra=%f,Rn=%f,Rt=%f,Precision=%f"%(Ra_max,Rn_max,Rt_max,precison_max))
 	#print("Optimazed Param:Deviation=%f, WindowSize=%d" %(div, WindowSize))
-	print(precison_max*100.0)
+	print("%f," % float(precison_max*100.0))
