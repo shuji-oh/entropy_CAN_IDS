@@ -165,9 +165,9 @@ e_recall=[
 ]
 
 values = ['0', '3', '7', '11', '15', '19', '23', '27', '31', '35', '39', '43', '47', '51', '55', '59', '63', '95', '127', '255', '511', '1023', '1535', '2037'] 
-FSIZE = 12
+FSIZE = 14
 
-fig = plt.figure(figsize=(9.3, 7))
+fig = plt.figure(figsize=(10, 8))
 
 plt.plot(x,hcrlab_recall, linewidth=2.0, marker='.', label='HCR Lab')
 plt.plot(x,a_recall, linewidth=2.0, marker='x', label='A')
